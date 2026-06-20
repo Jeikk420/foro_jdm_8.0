@@ -8,4 +8,5 @@ import org.springframework.stereotype.Repository;
 public interface UsuarioRepository extends JpaRepository<Usuario, Long> {
     // Spring Boot crea automáticamente las consultas por nosotros
     boolean existsByUsername(String username);
+    boolean existsByEmail(String email);
 }

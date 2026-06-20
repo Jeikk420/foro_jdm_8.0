@@ -19,7 +19,7 @@ public class UsuarioService {
     private UsuarioRepository repository;
 
     @Autowired
-    private PasswordEncoder passwordEncoder; // 👈 1. Inyectamos la juguera criptográfica
+    private PasswordEncoder passwordEncoder;
 
     // ==========================================
     // 🛠️ MÉTODO PARA CREAR (POST)
@@ -27,82 +27,59 @@ public class UsuarioService {
     public UsuarioResponseDTO crearUsuario(UsuarioRequestDTO dto) {
         log.info("Iniciando creación de usuario: " + dto.getUsername());
 
+        // 🔥 VALIDACIÓN: Verificar si ya existe
+        if (repository.existsByUsername(dto.getUsername())) {
+            throw new RuntimeException("El nombre de usuario '" + dto.getUsername() + "' ya está registrado.");
+        }
+        if (repository.existsByEmail(dto.getEmail())) {
+            throw new RuntimeException("El email '" + dto.getEmail() + "' ya está registrado.");
+        }
+
         Usuario usuario = new Usuario();
         usuario.setUsername(dto.getUsername());
         usuario.setEmail(dto.getEmail());
-        
-        // 👇 2. Encriptamos la clave antes de guardarla
         usuario.setPassword(passwordEncoder.encode(dto.getPassword())); 
-        
         usuario.setRango(dto.getRango());
         usuario.setCorte(dto.getCorte());
 
-        // 👉 AQUÍ INICIA LA REGLA DE NEGOCIO EN VIVO
         String equipoRecibido = dto.getEquipo();
-        
         if (equipoRecibido == null || equipoRecibido.isEmpty()) {
             usuario.setEquipo("Piloto Independiente");
         } else {
             usuario.setEquipo(equipoRecibido);
         }
-        // 👉 FIN DE LA REGLA DE NEGOCIO
         
         Usuario guardado = repository.save(usuario);
-        log.info("Usuario guardado exitosamente en BD con ID: " + guardado.getId());
+        log.info("Usuario guardado exitosamente con ID: " + guardado.getId());
 
-        UsuarioResponseDTO response = new UsuarioResponseDTO();
-        response.setId(guardado.getId());
-        response.setUsername(guardado.getUsername());
-        response.setEmail(guardado.getEmail());
-        response.setRango(guardado.getRango());
-        response.setCorte(guardado.getCorte());
-        response.setEquipo(guardado.getEquipo());
-        return response;
+        return convertirADTO(guardado);
     } 
 
     // ==========================================
     // 🛠️ MÉTODO PARA ACTUALIZAR (PUT)
     // ==========================================
     public UsuarioResponseDTO actualizarUsuario(Long id, UsuarioRequestDTO requestDTO) {
-        // 1. Buscamos el usuario en la base de datos
         Usuario usuario = repository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
 
-        // 2. Le cambiamos los repuestos (actualizamos sus datos)
         usuario.setUsername(requestDTO.getUsername());
         usuario.setEmail(requestDTO.getEmail());
-        
-        // 👇 3. Encriptamos la nueva clave si el usuario la cambia
         usuario.setPassword(passwordEncoder.encode(requestDTO.getPassword())); 
-        
         usuario.setRango(requestDTO.getRango());
         usuario.setCorte(requestDTO.getCorte());
         usuario.setEquipo(requestDTO.getEquipo());
 
-        // 4. Guardamos los cambios en la BD
         Usuario usuarioActualizado = repository.save(usuario);
-
-        // 5. Empaquetamos la respuesta para no mostrar la contraseña
-        UsuarioResponseDTO response = new UsuarioResponseDTO();
-        response.setId(usuarioActualizado.getId());
-        response.setUsername(usuarioActualizado.getUsername());
-        response.setEmail(usuarioActualizado.getEmail());
-        response.setRango(usuarioActualizado.getRango());
-        response.setCorte(usuarioActualizado.getCorte());
-        response.setEquipo(usuarioActualizado.getEquipo());
-
-        return response;
+        return convertirADTO(usuarioActualizado);
     }
 
     // ==========================================
     // 🗑️ MÉTODO PARA ELIMINAR (DELETE)
     // ==========================================
     public void eliminarUsuario(Long id) {
-        // Verificamos si el piloto existe antes de intentar borrarlo
         if (!repository.existsById(id)) {
             throw new RuntimeException("Usuario no encontrado");
         }
-        // Lo borramos de la base de datos
         repository.deleteById(id);
     }
 
@@ -110,11 +87,13 @@ public class UsuarioService {
     // 🔍 MÉTODO PARA BUSCAR (GET)
     // ==========================================
     public UsuarioResponseDTO obtenerPorId(Long id) {
-        log.info("Buscando usuario con ID: " + id);
-        
         Usuario usuario = repository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Usuario no encontrado con ID: " + id));
-                
+        return convertirADTO(usuario);
+    }
+
+    // 👉 MÉTODO AUXILIAR PARA LIMPIAR CÓDIGO (DRY)
+    private UsuarioResponseDTO convertirADTO(Usuario usuario) {
         UsuarioResponseDTO response = new UsuarioResponseDTO();
         response.setId(usuario.getId());
         response.setUsername(usuario.getUsername());
