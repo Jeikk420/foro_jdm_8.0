@@ -1,0 +1,25 @@
+server:
+  port: 8085
+
+spring:
+  application:
+    name: ms-hilos
+  datasource:
+    url: jdbc:mysql://localhost:3306/foro_hilos_db
+    username: root
+    password: 
+    driver-class-name: com.mysql.cj.jdbc.Driver
+  jpa:
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MySQLDialect
+
+springdoc:
+  packages-to-scan: ms_hilos.ms_hilos.controller
+
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka/

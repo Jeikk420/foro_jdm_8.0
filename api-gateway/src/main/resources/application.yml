@@ -1,0 +1,51 @@
+server:
+  port: 8090
+
+spring:
+  application:
+    name: api-gateway
+  cloud:
+    gateway:
+      discovery:
+        locator:
+          enabled: true
+      routes:
+        - id: ms-usuarios
+          uri: lb://ms-usuarios
+          predicates:
+            - Path=/api/usuarios/**
+        - id: ms-hilos
+          uri: lb://ms-hilos
+          predicates:
+            - Path=/api/hilos/**
+        - id: ms-categorias
+          uri: lb://ms-categorias
+          predicates:
+            - Path=/api/categorias/**
+        - id: ms-comentarios
+          uri: lb://ms-comentarios
+          predicates:
+            - Path=/api/comentarios/**
+        - id: ms-reacciones
+          uri: lb://ms-reacciones
+          predicates:
+            - Path=/api/reacciones/**
+        - id: ms-notificaciones
+          uri: lb://ms-notificaciones
+          predicates:
+            - Path=/api/notificaciones/**
+      globalcors:
+        corsConfigurations:
+          '[/**]':
+            allowedOrigins: "*"
+            allowedMethods:
+              - GET
+              - POST
+              - PUT
+              - DELETE
+            allowedHeaders: "*"
+
+eureka:
+  client:
+    service-url:
+      defaultZone: http://host.docker.internal:8761/eureka/

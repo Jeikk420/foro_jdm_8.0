@@ -1,0 +1,213 @@
+version: '3.8'
+
+services:
+  # MySQL Database
+  mysql:
+    image: mysql:8.0
+    container_name: foro_mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: root123
+      MYSQL_DATABASE: foro_jdm
+      MYSQL_USER: foro_user
+      MYSQL_PASSWORD: foro_pass123
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    networks:
+      - foro_network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      timeout: 20s
+      retries: 10
+
+  # Eureka Server
+  eureka-server:
+    build:
+      context: ./eureka-server
+      dockerfile: Dockerfile
+    container_name: eureka_server
+    ports:
+      - "8761:8761"
+    environment:
+      SPRING_APPLICATION_NAME: eureka-server
+      SERVER_PORT: 8761
+      EUREKA_CLIENT_REGISTER_WITH_EUREKA: "false"
+      EUREKA_CLIENT_FETCH_REGISTRY: "false"
+    networks:
+      - foro_network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8761/eureka"]
+      timeout: 10s
+      retries: 5
+    depends_on:
+      - mysql
+
+  # API Gateway
+  api-gateway:
+    build:
+      context: ./api-gateway
+      dockerfile: Dockerfile
+    container_name: api_gateway
+    ports:
+      - "8080:8080"
+    environment:
+      SPRING_APPLICATION_NAME: api-gateway
+      SERVER_PORT: 8080
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka/
+    networks:
+      - foro_network
+    depends_on:
+      eureka-server:
+        condition: service_healthy
+
+  # MS-USUARIOS
+  ms-usuarios:
+    build:
+      context: ./ms-usuarios
+      dockerfile: Dockerfile
+    container_name: ms_usuarios
+    ports:
+      - "8081:8081"
+    environment:
+      SPRING_APPLICATION_NAME: ms-usuarios
+      SERVER_PORT: 8081
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/foro_jdm
+      SPRING_DATASOURCE_USERNAME: foro_user
+      SPRING_DATASOURCE_PASSWORD: foro_pass123
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka/
+    networks:
+      - foro_network
+    depends_on:
+      mysql:
+        condition: service_healthy
+      eureka-server:
+        condition: service_healthy
+
+  # MS-CATEGORIAS
+  ms-categorias:
+    build:
+      context: ./ms_categorias
+      dockerfile: Dockerfile
+    container_name: ms_categorias
+    ports:
+      - "8082:8082"
+    environment:
+      SPRING_APPLICATION_NAME: ms-categorias
+      SERVER_PORT: 8082
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/foro_jdm
+      SPRING_DATASOURCE_USERNAME: foro_user
+      SPRING_DATASOURCE_PASSWORD: foro_pass123
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka/
+    networks:
+      - foro_network
+    depends_on:
+      mysql:
+        condition: service_healthy
+      eureka-server:
+        condition: service_healthy
+
+  # MS-HILOS
+  ms-hilos:
+    build:
+      context: ./ms-hilos
+      dockerfile: Dockerfile
+    container_name: ms_hilos
+    ports:
+      - "8083:8083"
+    environment:
+      SPRING_APPLICATION_NAME: ms-hilos
+      SERVER_PORT: 8083
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/foro_jdm
+      SPRING_DATASOURCE_USERNAME: foro_user
+      SPRING_DATASOURCE_PASSWORD: foro_pass123
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka/
+    networks:
+      - foro_network
+    depends_on:
+      mysql:
+        condition: service_healthy
+      eureka-server:
+        condition: service_healthy
+
+  # MS-COMENTARIOS
+  ms-comentarios:
+    build:
+      context: ./ms-comentarios
+      dockerfile: Dockerfile
+    container_name: ms_comentarios
+    ports:
+      - "8084:8084"
+    environment:
+      SPRING_APPLICATION_NAME: ms-comentarios
+      SERVER_PORT: 8084
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/foro_jdm
+      SPRING_DATASOURCE_USERNAME: foro_user
+      SPRING_DATASOURCE_PASSWORD: foro_pass123
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka/
+    networks:
+      - foro_network
+    depends_on:
+      mysql:
+        condition: service_healthy
+      eureka-server:
+        condition: service_healthy
+
+  # MS-REACCIONES
+  ms-reacciones:
+    build:
+      context: ./ms-reacciones
+      dockerfile: Dockerfile
+    container_name: ms_reacciones
+    ports:
+      - "8085:8085"
+    environment:
+      SPRING_APPLICATION_NAME: ms-reacciones
+      SERVER_PORT: 8085
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/foro_jdm
+      SPRING_DATASOURCE_USERNAME: foro_user
+      SPRING_DATASOURCE_PASSWORD: foro_pass123
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka/
+    networks:
+      - foro_network
+    depends_on:
+      mysql:
+        condition: service_healthy
+      eureka-server:
+        condition: service_healthy
+
+  # MS-NOTIFICACIONES
+  ms-notificaciones:
+    build:
+      context: ./ms-notificaciones
+      dockerfile: Dockerfile
+    container_name: ms_notificaciones
+    ports:
+      - "8086:8086"
+    environment:
+      SPRING_APPLICATION_NAME: ms-notificaciones
+      SERVER_PORT: 8086
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/foro_jdm
+      SPRING_DATASOURCE_USERNAME: foro_user
+      SPRING_DATASOURCE_PASSWORD: foro_pass123
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka/
+    networks:
+      - foro_network
+    depends_on:
+      mysql:
+        condition: service_healthy
+      eureka-server:
+        condition: service_healthy
+
+volumes:
+  mysql_data:
+
+networks:
+  foro_network:
+    driver: bridge
